@@ -7,6 +7,11 @@ authors = ["Moritz Makowski <moritz@dostuffthatmatters.dev>"]
 [tool.poetry.dependencies]
 python = "^3.8"
 autopep8 = "^1.5.4"
+python-dotenv = "^0.14.0"
+pytest-cov = "^2.10.1"
+fastapi = "^0.61.1"
+requests = "^2.24.0"
+motor = "^2.3.0"
 
 [tool.poetry.dev-dependencies]
 pytest = "^4.6"

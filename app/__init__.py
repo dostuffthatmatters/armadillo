@@ -12,3 +12,5 @@ app = FastAPI()
 motor_client = AsyncIOMotorClient(MONGO_DB_CONNECTION_STRING)
 database = motor_client[ENVIRONMENT]
 repo_collection = database['repositories']
+
+from app.routes import *  # nopep8
