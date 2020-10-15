@@ -1,7 +1,7 @@
 [tool.poetry]
 name = "armadillo"
 version = "0.1.0"
-description = "Providing download links for github subdirectories"
+description = "Providing download links for GitHub subdirectories"
 authors = ["Moritz Makowski <moritz@dostuffthatmatters.dev>"]
 
 [tool.poetry.dependencies]

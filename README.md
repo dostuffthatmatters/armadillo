@@ -1,5 +1,5 @@
 # Armadillo
 
-**Goal:** Providing download links for github subdirectories.
+**Goal:** Providing download links for GitHub subdirectories
 
 **Usage:** _coming soon_
