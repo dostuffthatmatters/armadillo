@@ -15,7 +15,8 @@ load_dotenv()
 assert(all([
     isinstance(os.getenv(env_var), str) for env_var in [
         'ENVIRONMENT',
-        'MONGO_DB_CONNECTION_STRING'
+        'MONGO_DB_CONNECTION_STRING',
+        'GITHUB_API_TOKEN'
     ]
 ]))
 assert(os.getenv('ENVIRONMENT') in ['production', 'development', 'testing'])
@@ -24,3 +25,4 @@ assert(os.getenv('ENVIRONMENT') in ['production', 'development', 'testing'])
 ENVIRONMENT = os.getenv('ENVIRONMENT') if ENVIRONMENT is None else ENVIRONMENT
 
 MONGO_DB_CONNECTION_STRING = os.getenv('MONGO_DB_CONNECTION_STRING')
+GITHUB_API_TOKEN = os.getenv('GITHUB_API_TOKEN')

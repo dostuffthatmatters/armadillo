@@ -13,6 +13,8 @@ fastapi = "^0.61.1"
 requests = "^2.24.0"
 motor = "^2.3.0"
 dnspython = "^2.0.0"
+httpx = {extras = ["http2"], version = "^0.16.1"}
+uvicorn = "^0.12.1"
 
 [tool.poetry.dev-dependencies]
 pytest = "^4.6"
