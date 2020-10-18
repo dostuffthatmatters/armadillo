@@ -10,6 +10,7 @@ from fastapi.responses import RedirectResponse
 
 from app import (ENVIRONMENT, app, fetch_new_token, github_api_client,
                  github_download_client, repo_collection, storage_client)
+from app.utilities import get_default_branch, get_current_sha
 import os
 
 
@@ -32,30 +33,8 @@ async def download_subdirectory(username, repository, file_path: str):
             details=f"invalid file_path '{file_path}'"
         )
 
-    response = await github_api_client.get(
-        f"/repos/{username}/{repository}/commits",
-        params={"path": file_path}
-    )
-    if response.status_code == 404:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"nothing found @ '/{username}/{repository}'",
-        )
-    if response.status_code != 200:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Internal Server Error",
-        )
-
     url = f'/{username}/{repository}/{file_path}'
-    response_dict = json.loads(response.content)
-    if len(response_dict) == 0:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"nothing found in subdirectory @ '/{username}/{repository}/{file_path}'",
-        )
-
-    current_sha = response_dict[0]["sha"]
+    current_sha = await get_current_sha(username, repository, file_path)
     db_document = await repo_collection.find_one(
         {"url": url},
         {"_id": 0, "sha": 1}
@@ -131,21 +110,3 @@ async def download_root(username, repository):
         f"https://github.com/{username}/{repository}" +
         f"/archive/{default_branch}.zip"
     )
-
-
-async def get_default_branch(username, repository):
-    response = await github_api_client.get(
-        f"/repos/{username}/{repository}"
-    )
-    if response.status_code == 404:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"nothing found @ '/{username}/{repository}'",
-        )
-    if response.status_code != 200:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Internal Server Error",
-        )
-
-    return json.loads(response.content)["default_branch"]
