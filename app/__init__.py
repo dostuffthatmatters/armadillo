@@ -33,10 +33,9 @@ token_client = httpx.AsyncClient(
     }
 )
 
-storage_client = httpx.AsyncClient(
-    base_url="https://storage.googleapis.com/storage/v1/b",
-    http2=True,
-    params={"key": IBM_ACCESS_TOKEN}
+storage_client = httpx.Client(
+    base_url="https://s3.eu-de.cloud-object-storage.appdomain.cloud/armadillo-repositories",
+    headers={"Authorization": f"bearer {IBM_ACCESS_TOKEN}"}
 )
 
 
@@ -52,6 +51,6 @@ async def fetch_new_token():
     assert("access_token" in obj)
     IBM_ACCESS_TOKEN = obj["access_token"]
 
-    storage_client.params = {"key": IBM_ACCESS_TOKEN}
+    storage_client.headers = {"Authorization": f"bearer {IBM_ACCESS_TOKEN}"}
 
 from app.routes import *  # nopep8

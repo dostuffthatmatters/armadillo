@@ -98,11 +98,14 @@ async def download_subdirectory(username, repository, file_path: str):
                 zip.write(f"{folder_name}/{file}")
             os.chdir("../" * (4 + len(file_path.split('/'))))
 
+        response = storage_client.put(
+            f"/{username}/{repository}/{filename}.zip",
+            data=open(f"{tmp_dir}/{filename}.zip", 'rb')
+        )
+
         shutil.rmtree(f"{tmp_dir}")
         if len(os.listdir(f"tmp/{username}/{repository}")) == 0:
             shutil.rmtree(f"tmp/{username}")
-
-        # TODO: Upload file to IBM Object Storage
 
         await repo_collection.update_one(
             {"url": url}, {"$set": {"sha": current_sha}}, upsert=True
