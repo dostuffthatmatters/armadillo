@@ -1,9 +1,14 @@
 
+import json
+from os import mkdir
+
+import httpx
 from fastapi import HTTPException, status
 from fastapi.responses import RedirectResponse
-from app import app, ENVIRONMENT, repo_collection, \
-    github_client, storage_client, fetch_new_token
-import json
+
+from app import (ENVIRONMENT, app, fetch_new_token, github_api_client,
+                 github_download_client, repo_collection, storage_client)
+import os
 
 
 @app.get('/')
@@ -25,7 +30,7 @@ async def download_subdirectory(username, repository, file_path: str):
             details=f"invalid file_path '{file_path}'"
         )
 
-    response = await github_client.get(
+    response = await github_api_client.get(
         f"/repos/{username}/{repository}/commits",
         params={"path": file_path}
     )
@@ -40,8 +45,6 @@ async def download_subdirectory(username, repository, file_path: str):
             detail=f"Internal Server Error",
         )
 
-    # return response.content
-
     url = f'/{username}/{repository}/{file_path}'
     response_dict = json.loads(response.content)
     current_sha = response_dict[0]["sha"]
@@ -50,23 +53,38 @@ async def download_subdirectory(username, repository, file_path: str):
         {"_id": 0, "sha": 1}
     )
 
-    update_zip = (db_document is None) or (db_document["sha"] != current_sha)
-    if db_document is None:
-        await repo_collection.insert_one(
-            {"url": url, "sha": current_sha}
-        )
+    # update_zip = (db_document is None) or (db_document["sha"] != current_sha)
+    update_zip = True
 
     if update_zip:
-        # open("tmp/{username}/{repository}")
+
+        print("updating zip")
         # TODO: renew stored file to be downloaded
-        pass
+
+        encoded_file_path = file_path.replace('/', '-')
+        filename = f"{repository}-{encoded_file_path}"
+        if username not in os.listdir("tmp"):
+            os.mkdir(f"tmp/{username}")
+        if repository not in os.listdir(f"tmp/{username}"):
+            os.mkdir(f"tmp/{username}/{repository}")
+        if filename not in os.listdir((f"tmp/{username}/{repository}")):
+            os.mkdir(f"tmp/{username}/{repository}/{filename}")
+
+        with open(f"tmp/{username}/{repository}/{filename}/master.zip", "wb") as file:
+            response = await github_download_client.get(
+                f"/{username}/{repository}/archive/master.zip"
+            )
+            file.write(response.content)
+
+        await repo_collection.update_one(
+            {"url": url}, {"$set": {"sha": current_sha}}, upsert=True
+        )
 
     # TODO: Return file as download
 
     return {
         "username": username,
         "repository": repository,
-        "response_dict": response_dict,
         "status_code": response.status_code
     }
 

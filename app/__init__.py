@@ -15,8 +15,13 @@ motor_client = AsyncIOMotorClient(MONGO_DB_CONNECTION_STRING)
 database = motor_client[ENVIRONMENT]
 repo_collection = database['repositories']
 
-github_client = httpx.AsyncClient(
+github_api_client = httpx.AsyncClient(
     base_url="https://api.github.com",
+    http2=True,
+)
+
+github_download_client = httpx.AsyncClient(
+    base_url="https://github.com",
     http2=True,
 )
 
