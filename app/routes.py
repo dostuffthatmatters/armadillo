@@ -1,6 +1,7 @@
 
 from fastapi import HTTPException, status
-from app import app, httpx_client, ENVIRONMENT, repo_collection
+from app import app, ENVIRONMENT, repo_collection, \
+    github_client, storage_client, fetch_new_token
 
 
 @app.get('/')
@@ -13,7 +14,7 @@ def index_route():
 
 @app.get('/{username}/{repository}')
 async def get_commits(username, repository):
-    response = await httpx_client.get(f"/repos/{username}/{repository}/commits")
+    response = await github_client.get(f"/repos/{username}/{repository}/commits")
     if response.status_code == 404:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
