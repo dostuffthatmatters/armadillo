@@ -8,16 +8,12 @@ authors = ["Moritz Makowski <moritz@dostuffthatmatters.dev>"]
 python = "^3.8"
 autopep8 = "^1.5.4"
 python-dotenv = "^0.14.0"
-pytest-cov = "^2.10.1"
 fastapi = "^0.61.1"
 requests = "^2.24.0"
 motor = "^2.3.0"
 dnspython = "^2.0.0"
 httpx = {extras = ["http2"], version = "^0.16.1"}
 uvicorn = "^0.12.1"
-
-[tool.poetry.dev-dependencies]
-pytest = "^4.6"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
