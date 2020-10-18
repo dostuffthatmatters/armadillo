@@ -39,7 +39,7 @@ async def download_subdirectory(username, repository, file_path: str):
     if response.status_code == 404:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"nothing found @ '/{username}/{repository}/{file_path}'",
+            detail=f"nothing found @ '/{username}/{repository}'",
         )
     if response.status_code != 200:
         raise HTTPException(
@@ -49,24 +49,24 @@ async def download_subdirectory(username, repository, file_path: str):
 
     url = f'/{username}/{repository}/{file_path}'
     response_dict = json.loads(response.content)
+    if len(response_dict) == 0:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"nothing found in subdirectory @ '/{username}/{repository}/{file_path}'",
+        )
+
     current_sha = response_dict[0]["sha"]
     db_document = await repo_collection.find_one(
         {"url": url},
         {"_id": 0, "sha": 1}
     )
 
-    # update_zip = (db_document is None) or (db_document["sha"] != current_sha)
-    update_zip = True
+    encoded_file_path = file_path.replace('/', '-')
+    filename = f"{repository}-{encoded_file_path}"
 
-    if update_zip:
-
-        print("updating zip")
-        # TODO: renew stored file to be downloaded
+    if (db_document is None) or (db_document["sha"] != current_sha):
 
         default_branch = await get_default_branch(username, repository)
-
-        encoded_file_path = file_path.replace('/', '-')
-        filename = f"{repository}-{encoded_file_path}"
         tmp_dir = f"tmp/{username}/{repository}/{filename}"
         if username not in os.listdir("tmp"):
             os.mkdir(f"tmp/{username}")
@@ -102,6 +102,11 @@ async def download_subdirectory(username, repository, file_path: str):
             f"/{username}/{repository}/{filename}.zip",
             data=open(f"{tmp_dir}/{filename}.zip", 'rb')
         )
+        if response.status != 200:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"IBM Storage API did not respond as expected",
+            )
 
         shutil.rmtree(f"{tmp_dir}")
         if len(os.listdir(f"tmp/{username}/{repository}")) == 0:
@@ -111,13 +116,10 @@ async def download_subdirectory(username, repository, file_path: str):
             {"url": url}, {"$set": {"sha": current_sha}}, upsert=True
         )
 
-    # TODO: Return file as download link
-
-    return {
-        "username": username,
-        "repository": repository,
-        "status_code": response.status_code
-    }
+    return RedirectResponse(
+        "https://s3.eu-de.cloud-object-storage.appdomain.cloud/armadillo-repositories" +
+        f"/{username}/{repository}/{filename}.zip"
+    )
 
 
 @app.get('/{username}/{repository}')
