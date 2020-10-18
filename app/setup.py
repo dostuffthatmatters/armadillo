@@ -29,19 +29,18 @@ ENVIRONMENT = os.getenv('ENVIRONMENT') if ENVIRONMENT is None else ENVIRONMENT
 MONGO_DB_CONNECTION_STRING = os.getenv('MONGO_DB_CONNECTION_STRING')
 IBM_API_KEY = os.getenv('IBM_API_KEY')
 
-token_client = httpx.Client(
-    base_url="https://iam.cloud.ibm.com/oidc",
+response = httpx.post(
+    "https://iam.cloud.ibm.com/oidc/token",
     headers={
         "Accept": "application/json",
         "Content-Type": "application/x-www-form-urlencoded"
+    },
+    data={
+        "apikey": IBM_API_KEY,
+        "response_type": "cloud_iam",
+        "grant_type": "urn:ibm:params:oauth:grant-type:apikey"
     }
 )
-
-response = token_client.post("/token", data={
-    "apikey": IBM_API_KEY,
-    "response_type": "cloud_iam",
-    "grant_type": "urn:ibm:params:oauth:grant-type:apikey"
-})
 assert(response.status_code == 200)
 obj = json.loads(response.content.decode())
 assert("access_token" in obj)

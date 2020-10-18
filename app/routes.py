@@ -1,17 +1,9 @@
 
-import json
-from os import mkdir
-import shutil
-from zipfile import ZipFile
-
-import httpx
 from fastapi import HTTPException, status
 from fastapi.responses import RedirectResponse
 
-from app import (ENVIRONMENT, app, fetch_new_token, github_api_client,
-                 github_download_client, repo_collection, storage_client)
+from app import app, repo_collection, ENVIRONMENT
 from app.utilities import get_default_branch, get_current_sha, generate_subdir_zip
-import os
 
 
 @app.get('/')
