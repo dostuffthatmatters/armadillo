@@ -9,7 +9,9 @@ from app.main import app, repo_collection
 @app.get('/')
 def index_route():
     return {
-        "status": "running"
+        "name": "Armadillo",
+        "status": "running",
+        "github": "https://github.com/dostuffthatmatters/armadillo"
     }
 
 
