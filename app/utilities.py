@@ -57,20 +57,24 @@ async def get_current_sha(username, repository, file_path):
 
 async def generate_subdir_zip(username, repository, file_path, filename):
     default_branch = await get_default_branch(username, repository)
-    tmp_dir = f"tmp/{username}/{repository}/{filename}"
+
+    # 1. Create working directory for re-zipping
+    #    repo name already included in filename
+    tmp_dir = f"tmp/{username}/{filename}"
     if username not in os.listdir("tmp"):
         os.mkdir(f"tmp/{username}")
-    if repository not in os.listdir(f"tmp/{username}"):
-        os.mkdir(f"tmp/{username}/{repository}")
-    if filename not in os.listdir((f"tmp/{username}/{repository}")):
+    if filename not in os.listdir((f"tmp/{username}")):
         os.mkdir(tmp_dir)
 
+    # 2. Download the whole repo-zip
     with open(f"{tmp_dir}/{default_branch}.zip", "wb") as file:
         response = await github_download_client.get(
             f"/{username}/{repository}/archive/{default_branch}.zip"
         )
         file.write(response.content)
 
+    # 3. Check the validity of the repo-zip
+    # 4. Unzip it
     with ZipFile(f"{tmp_dir}/{default_branch}.zip", 'r') as zip:
         if f"{repository}-{default_branch}/" not in zip.namelist():
             raise HTTPException(
@@ -79,12 +83,15 @@ async def generate_subdir_zip(username, repository, file_path, filename):
             )
         zip.extractall(tmp_dir)
 
-    # writing files to a zipfile
+    # 5. 'Rezip' the contents = Generate the subdirectory-zip
     with ZipFile(f"{tmp_dir}/{filename}.zip", 'w') as zip:
+
         path_list = file_path.split('/')
         parent_path = "./" + "/".join(path_list[:-1])
         subdir_name = path_list[-1]
 
+        # Switch into the folder where the subdirectory
+        # to be zipped is located (the parent of the file-path)
         relative_working_directory = \
             f"{tmp_dir}/{repository}-{default_branch}/{parent_path}"
         os.chdir(relative_working_directory)
@@ -102,24 +109,37 @@ async def generate_subdir_zip(username, repository, file_path, filename):
         # Move back to initial directory
         os.chdir("../" * len(relative_working_directory))
 
-    # File upload are not asyncronous
+    # 6. Upload file to IBM object storage (not asyncronous)
     response = ibm_upload_client.put(
-        f"/{username}/{repository}/{filename}.zip",
+        f"/{username}/{filename}.zip",
         data=open(f"{tmp_dir}/{filename}.zip", 'rb'),
         headers={"Authorization": "bearer " + os.getenv("IBM_ACCESS_TOKEN")}
     )
 
+    # 7. If that upload did not work (IBM OAuth token expired)
+    #    The storage tokens expire ever 3600 seconds (1 hour)
     if response.status_code == 401:
-        # The storage tokens expire ever 3600 seconds (1 hour)
         await generate_new_storage_token()
+        # (8.) Upload again with new token
+        response = ibm_upload_client.put(
+            f"/{username}/{filename}.zip",
+            data=open(f"{tmp_dir}/{filename}.zip", 'rb'),
+            headers={"Authorization": "bearer " + os.getenv("IBM_ACCESS_TOKEN")}
+        )
+
+    # 9. Raise error if upload still did not work
     if response.status_code != 200:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"IBM Storage API did not respond as expected",
         )
 
+    # 10. Remove working directory of this Rezipping
     shutil.rmtree(f"{tmp_dir}")
-    if len(os.listdir(f"tmp/{username}/{repository}")) == 0:
+
+    # 11. Remove that users tmp dir (when no other
+    #     rezipping is happening concurrently)
+    if len(os.listdir(f"tmp/{username}")) == 0:
         shutil.rmtree(f"tmp/{username}")
 
 
