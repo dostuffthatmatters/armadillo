@@ -1,5 +1,4 @@
-tmp/*
-!tmp/.gitkeep
+tmp
 app.yaml
 .gcloudignore
 requirements.txt
