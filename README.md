@@ -1,27 +1,27 @@
 # Armadillo
 
-<img align="right" src="https://www.nationalgeographic.com/content/dam/animals/thumbs/rights-exempt/mammals/group/armadillos_thumb.JPG" width="200" height="200"/>
+<p align="center">
+<img src="https://www.nationalgeographic.com/content/dam/animals/thumbs/rights-exempt/mammals/group/armadillos_thumb.JPG" width="300" height="300"/>
+</p>
 
-### Goal
+## Goal
 
 Providing download links for GitHub subdirectories.
 
 <br/>
 
-### Usecase
+## Usecase
 
-You might be looking at reference projects to be deployed on some Cloud Infrastructure (e.g. GCP). They have a GitHub repository containing these examples @ [.../GoogleCloudPlatform/cloud-code-samples](https://github.com/GoogleCloudPlatform/cloud-code-samples).
+You might be looking at reference projects to be deployed on some Cloud Infrastructure (e.g. GCP). They have a GitHub repository containing these examples @ [.../GoogleCloudPlatform/cloud-code-samples](https://github.com/GoogleCloudPlatform/cloud-code-samples). But you only want to read into the example located @ [/python/django/python-hello-world](https://github.com/GoogleCloudPlatform/cloud-code-samples/tree/master/python/django/python-hello-world).
 
-I only want to read into the project located @ [/python/django/python-hello-world](https://github.com/GoogleCloudPlatform/cloud-code-samples/tree/master/python/django/python-hello-world).
+**The Problem:** You can only download the code either file by file or by cloning the whole repository ... not great!
 
-**The Problem:** I can only download the code either file by file or by cloning the whole repository ... not great!
-
-**The Solution:** Now I can use **Armadillo** to do that for me. The following link does just that:
+**The Solution:** Now you can use **Armadillo** to do that for you. The following link does just that:
 [https://armadillo.dostuffthatmatters.dev/GoogleCloudPlatform/cloud-code-samples/python/django/python-hello-world](https://armadillo.dostuffthatmatters.dev/GoogleCloudPlatform/cloud-code-samples/python/django/python-hello-world)
 
 <br/>
 
-### Usage
+## Usage
 
 You don't have to configure anything!
 
@@ -35,7 +35,7 @@ https://armadillo.dostuffthatmatters.dev/{username}/{repository-name}{subdirecto
 
 <br/>
 
-### About the Implementation
+## About the Implementation
 
 Whenever a specific subdirectory of a repository is requested:
 
