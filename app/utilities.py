@@ -29,6 +29,14 @@ async def get_default_branch(username, repository):
     return json.loads(response.content)["default_branch"]
 
 
+# Unused (nopep8)
+async def is_valid_path(username, repository, default_branch, file_path):
+    response = await github_download_client.get(
+        f"/{username}/{repository}/tree/{default_branch}/{file_path}"
+    )
+    return response.status_code == 200
+
+
 async def get_current_sha(username, repository, file_path):
     response = await github_api_client.get(
         f"/repos/{username}/{repository}/commits",
@@ -73,17 +81,30 @@ async def generate_subdir_zip(username, repository, file_path, filename):
         )
         file.write(response.content)
 
-    # 3. Check the validity of the repo-zip
-    # 4. Unzip it
     with ZipFile(f"{tmp_dir}/{default_branch}.zip", 'r') as zip:
+        # 3. Check the validity of the repo-zip
         if f"{repository}-{default_branch}/" not in zip.namelist():
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail=f"GitHub API did not respond as expected",
             )
+
+        # 4. Check if the path actually exists. Edge case:
+        #    file_path did exist at some point but does not exist
+        #    anymore AND the zip has not yet been generated
+        if f"{repository}-{default_branch}/{file_path}" not in zip.namelist():
+            # I could have put this captcha at position 1 to avoid
+            # useless zip-downloads, but this edge case is so rare
+            # that by moving it here I will save one extra request
+            # on nearly all requests with rezipping
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"subdirectory used to exist but not anymore",
+            )
+        # 5. Unzip it
         zip.extractall(tmp_dir)
 
-    # 5. 'Rezip' the contents = Generate the subdirectory-zip
+    # 6. 'Rezip' the contents = Generate the subdirectory-zip
     with ZipFile(f"{tmp_dir}/{filename}.zip", 'w') as zip:
 
         path_list = file_path.split('/')
@@ -109,35 +130,35 @@ async def generate_subdir_zip(username, repository, file_path, filename):
         # Move back to initial directory
         os.chdir("../" * len(relative_working_directory))
 
-    # 6. Upload file to IBM object storage (not asyncronous)
+    # 7. Upload file to IBM object storage (not asyncronous)
     response = ibm_upload_client.put(
         f"/{username}/{filename}.zip",
         data=open(f"{tmp_dir}/{filename}.zip", 'rb'),
         headers={"Authorization": "bearer " + os.getenv("IBM_ACCESS_TOKEN")}
     )
 
-    # 7. If that upload did not work (IBM OAuth token expired)
+    # 8. If that upload did not work (IBM OAuth token expired)
     #    The storage tokens expire ever 3600 seconds (1 hour)
     if response.status_code == 401:
         await generate_new_storage_token()
-        # (8.) Upload again with new token
+        # (9.) Upload again with new token
         response = ibm_upload_client.put(
             f"/{username}/{filename}.zip",
             data=open(f"{tmp_dir}/{filename}.zip", 'rb'),
             headers={"Authorization": "bearer " + os.getenv("IBM_ACCESS_TOKEN")}
         )
 
-    # 9. Raise error if upload still did not work
+    # 10. Raise error if upload still did not work
     if response.status_code != 200:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"IBM Storage API did not respond as expected",
         )
 
-    # 10. Remove working directory of this Rezipping
+    # 11. Remove working directory of this Rezipping
     shutil.rmtree(f"{tmp_dir}")
 
-    # 11. Remove that users tmp dir (when no other
+    # 12. Remove that users tmp dir (when no other
     #     rezipping is happening concurrently)
     if len(os.listdir(f"tmp/{username}")) == 0:
         shutil.rmtree(f"tmp/{username}")
