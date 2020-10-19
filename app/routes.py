@@ -20,11 +20,16 @@ async def download_subdirectory(username, repository, file_path: str):
     try:
         assert(len(file_path) > 0)
         assert(file_path[0] != "/")
+        assert("//" not in file_path)
     except AssertionError:
         return HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             details=f"invalid file_path '{file_path}'"
         )
+
+    # Remove following "/": "a.ext/" -> "a.ext"
+    if file_path[-1] == "/":
+        file_path = file_path[:-1]
 
     url = f'/{username}/{repository}/{file_path}'
     current_sha = await get_current_sha(username, repository, file_path)

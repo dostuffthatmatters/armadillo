@@ -2,12 +2,13 @@
 import json
 import os
 import shutil
+from os.path import isdir
 from zipfile import ZipFile
 
 from fastapi import HTTPException, status
 
-from app.main import github_api_client, github_download_client, \
-    ibm_token_client, ibm_upload_client, IBM_API_KEY
+from app.main import (IBM_API_KEY, github_api_client, github_download_client,
+                      ibm_token_client, ibm_upload_client)
 
 
 async def get_default_branch(username, repository):
@@ -80,12 +81,26 @@ async def generate_subdir_zip(username, repository, file_path, filename):
 
     # writing files to a zipfile
     with ZipFile(f"{tmp_dir}/{filename}.zip", 'w') as zip:
-        os.chdir(f"{tmp_dir}/{repository}-{default_branch}/{file_path}/..")
-        folder_name = file_path.split('/')[-1]
-        file_list = os.listdir(folder_name)
-        for file in file_list:
-            zip.write(f"{folder_name}/{file}")
-        os.chdir("../" * (4 + len(file_path.split('/'))))
+        path_list = file_path.split('/')
+        parent_path = "./" + "/".join(path_list[:-1])
+        subdir_name = path_list[-1]
+
+        relative_working_directory = \
+            f"{tmp_dir}/{repository}-{default_branch}/{parent_path}"
+        os.chdir(relative_working_directory)
+
+        # Object at path is a directory
+        if os.path.isdir(subdir_name):
+            file_list = os.listdir(subdir_name)
+            for file in file_list:
+                zip.write(f"{subdir_name}/{file}")
+
+        # Object at path is single file
+        else:
+            zip.write(subdir_name)
+
+        # Move back to initial directory
+        os.chdir("../" * len(relative_working_directory))
 
     # File upload are not asyncronous
     response = ibm_upload_client.put(
