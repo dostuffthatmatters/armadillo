@@ -6,7 +6,7 @@ from zipfile import ZipFile
 
 from fastapi import HTTPException, status
 
-from app import github_api_client, github_download_client, \
+from app.main import github_api_client, github_download_client, \
     ibm_token_client, ibm_upload_client, IBM_API_KEY
 
 
@@ -90,12 +90,13 @@ async def generate_subdir_zip(username, repository, file_path, filename):
     # File upload are not asyncronous
     response = ibm_upload_client.put(
         f"/{username}/{repository}/{filename}.zip",
-        data=open(f"{tmp_dir}/{filename}.zip", 'rb')
+        data=open(f"{tmp_dir}/{filename}.zip", 'rb'),
+        headers={"Authorization": "bearer " + os.getenv("IBM_ACCESS_TOKEN")}
     )
 
     if response.status_code == 401:
         # The storage tokens expire ever 3600 seconds (1 hour)
-        await generate_new_storage_token(ibm_upload_client)
+        await generate_new_storage_token()
     if response.status_code != 200:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -107,7 +108,7 @@ async def generate_subdir_zip(username, repository, file_path, filename):
         shutil.rmtree(f"tmp/{username}")
 
 
-async def generate_new_storage_token(client_with_authentication):
+async def generate_new_storage_token():
     response = await ibm_token_client.post("/token", data={
         "apikey": IBM_API_KEY,
         "response_type": "cloud_iam",
@@ -116,8 +117,4 @@ async def generate_new_storage_token(client_with_authentication):
     assert(response.status_code == 200)
     obj = json.loads(response.content.decode())
     assert("access_token" in obj)
-    IBM_ACCESS_TOKEN = obj["access_token"]
-
-    client_with_authentication.headers = {
-        "Authorization": f"bearer {IBM_ACCESS_TOKEN}"
-    }
+    os.environ["IBM_ACCESS_TOKEN"] = obj["access_token"]

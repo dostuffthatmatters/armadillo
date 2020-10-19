@@ -2,15 +2,14 @@
 from fastapi import HTTPException, status
 from fastapi.responses import RedirectResponse
 
-from app import app, repo_collection, ENVIRONMENT
 from app.utilities import get_default_branch, get_current_sha, generate_subdir_zip
+from app.main import app, repo_collection
 
 
 @app.get('/')
 def index_route():
     return {
-        "status": "running",
-        "mode": ENVIRONMENT
+        "status": "running"
     }
 
 

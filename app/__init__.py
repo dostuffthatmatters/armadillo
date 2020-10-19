@@ -1,39 +1,32 @@
 
+import certifi
+import os
 import httpx
-from fastapi import FastAPI
-from motor.motor_asyncio import AsyncIOMotorClient
+import json
 
-# Set all environment variables
-from app.setup import *
+# Set correct SSL certificate
+os.environ['SSL_CERT_FILE'] = certifi.where()
 
-app = FastAPI()
+assert(os.getenv('MONGO_DB_CONNECTION_STRING') is not None)
+assert(os.getenv('IBM_API_KEY') is not None)
 
-motor_client = AsyncIOMotorClient(MONGO_DB_CONNECTION_STRING)
-database = motor_client[ENVIRONMENT]
-repo_collection = database['repositories']
-
-github_api_client = httpx.AsyncClient(
-    base_url="https://api.github.com",
-    http2=True,
-)
-
-github_download_client = httpx.AsyncClient(
-    base_url="https://github.com",
-    http2=True,
-)
-
-ibm_token_client = httpx.AsyncClient(
-    base_url="https://iam.cloud.ibm.com/oidc",
+token_response = httpx.post(
+    "https://iam.cloud.ibm.com/oidc/token",
     headers={
         "Accept": "application/json",
         "Content-Type": "application/x-www-form-urlencoded"
+    },
+    data={
+        "apikey": os.getenv('IBM_API_KEY'),
+        "response_type": "cloud_iam",
+        "grant_type": "urn:ibm:params:oauth:grant-type:apikey"
     }
 )
+print("os.environ ", os.environ)
+assert(token_response.status_code == 200)
+obj = json.loads(token_response.content.decode())
+assert("access_token" in obj)
+os.environ["IBM_ACCESS_TOKEN"] = obj["access_token"]
 
-# File upload is not asyncronous
-ibm_upload_client = httpx.Client(
-    base_url="https://s3.eu-de.cloud-object-storage.appdomain.cloud/armadillo-repositories",
-    headers={"Authorization": f"bearer {IBM_ACCESS_TOKEN}"}
-)
-
-from app.routes import *  # nopep8
+if "tmp" not in os.listdir("."):
+    os.mkdir("tmp")
