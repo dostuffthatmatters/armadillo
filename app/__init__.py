@@ -7,6 +7,7 @@ import json
 # Set correct SSL certificate
 os.environ['SSL_CERT_FILE'] = certifi.where()
 
+assert(os.getenv('ENVIRONMENT') in ['development', 'production'])
 assert(os.getenv('MONGO_DB_CONNECTION_STRING') is not None)
 assert(os.getenv('IBM_API_KEY') is not None)
 
@@ -22,7 +23,6 @@ token_response = httpx.post(
         "grant_type": "urn:ibm:params:oauth:grant-type:apikey"
     }
 )
-print("os.environ ", os.environ)
 assert(token_response.status_code == 200)
 obj = json.loads(token_response.content.decode())
 assert("access_token" in obj)

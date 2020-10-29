@@ -4,6 +4,7 @@ import os
 from fastapi import FastAPI
 from motor.motor_asyncio import AsyncIOMotorClient
 
+ENVIRONMENT = os.getenv('ENVIRONMENT')
 MONGO_DB_CONNECTION_STRING = os.getenv('MONGO_DB_CONNECTION_STRING')
 IBM_API_KEY = os.getenv('IBM_API_KEY')
 IBM_ACCESS_TOKEN = os.getenv('IBM_ACCESS_TOKEN')
@@ -11,7 +12,7 @@ IBM_ACCESS_TOKEN = os.getenv('IBM_ACCESS_TOKEN')
 app = FastAPI()
 
 motor_client = AsyncIOMotorClient(MONGO_DB_CONNECTION_STRING)
-database = motor_client['armadillo-db']
+database = motor_client[ENVIRONMENT]
 repo_collection = database['repositories']
 
 github_api_client = httpx.AsyncClient(
