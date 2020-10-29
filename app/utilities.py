@@ -68,10 +68,10 @@ async def generate_subdir_zip(username, repository, file_path, filename):
 
     # 1. Create working directory for re-zipping
     #    repo name already included in filename
-    tmp_dir = f"tmp/{username}/{filename}"
+    tmp_dir = f"./tmp/{username}/{filename}"
     if username not in os.listdir("tmp"):
-        os.mkdir(f"tmp/{username}")
-    if filename not in os.listdir((f"tmp/{username}")):
+        os.mkdir(f"./tmp/{username}")
+    if filename not in os.listdir((f"./tmp/{username}")):
         os.mkdir(tmp_dir)
 
     # 2. Download the whole repo-zip
@@ -92,17 +92,24 @@ async def generate_subdir_zip(username, repository, file_path, filename):
         # 4. Check if the path actually exists. Edge case:
         #    file_path did exist at some point but does not exist
         #    anymore AND the zip has not yet been generated
-        if f"{repository}-{default_branch}/{file_path}" not in zip.namelist():
-            # I could have put this captcha at position 1 to avoid
-            # useless zip-downloads, but this edge case is so rare
-            # that by moving it here I will save one extra request
-            # on nearly all requests with rezipping
+        print("zip.namelist()", zip.namelist())
+        print("file_path", file_path)
+        if all([
+            f"{repository}-{default_branch}/{file_path}" not in zip.namelist(),
+            f"{repository}-{default_branch}/{file_path}/" not in zip.namelist()
+        ]):
+            # I could have put this captcha at the beginning of this
+            # function to avoid useless zip-downloads, but this edge
+            # case is so rare that by moving it here I will save one
+            # extra request on nearly all requests with rezipping
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"subdirectory used to exist but not anymore",
             )
         # 5. Unzip it
         zip.extractall(tmp_dir)
+
+    print("112: os.getcwd()", os.getcwd())
 
     # 6. 'Rezip' the contents = Generate the subdirectory-zip
     with ZipFile(f"{tmp_dir}/{filename}.zip", 'w') as zip:
@@ -111,28 +118,32 @@ async def generate_subdir_zip(username, repository, file_path, filename):
         parent_path = "./" + "/".join(path_list[:-1])
         subdir_name = path_list[-1]
 
+        cwd = os.getcwd()
+
         # Switch into the folder where the subdirectory
         # to be zipped is located (the parent of the file-path)
-        relative_working_directory = \
+        os.chdir(
             f"{tmp_dir}/{repository}-{default_branch}/{parent_path}"
-        os.chdir(relative_working_directory)
+        )
 
-        # Object at path is a directory
-        if os.path.isdir(subdir_name):
-            file_list = os.listdir(subdir_name)
-            for file in file_list:
-                zip.write(f"{subdir_name}/{file}")
+        def write_zip(dir):
+            # Object at path is a directory
+            if os.path.isdir(dir):
+                for file in os.listdir(dir):
+                    write_zip(f"{dir}/{file}")
 
-        # Object at path is single file
-        else:
-            zip.write(subdir_name)
+            # Object at path is single file
+            else:
+                zip.write(dir)
+
+        write_zip(subdir_name)
 
         # Move back to initial directory
-        os.chdir("../" * len(relative_working_directory))
+        os.chdir(cwd)
 
     # 7. Upload file to IBM object storage (not asyncronous)
     response = ibm_upload_client.put(
-        f"/{username}/{filename}.zip",
+        f"/{username}/{repository}/{filename}.zip",
         data=open(f"{tmp_dir}/{filename}.zip", 'rb'),
         headers={"Authorization": "bearer " + os.getenv("IBM_ACCESS_TOKEN")}
     )
