@@ -10,17 +10,6 @@ Providing download links for GitHub subdirectories.
 
 <br/>
 
-## Usecase
-
-You might be looking at reference projects to be deployed on some Cloud Infrastructure (e.g. GCP). They have a GitHub repository containing these examples @ [.../GoogleCloudPlatform/cloud-code-samples](https://github.com/GoogleCloudPlatform/cloud-code-samples). But you only want to read into the example located @ [/python/django/python-hello-world](https://github.com/GoogleCloudPlatform/cloud-code-samples/tree/master/python/django/python-hello-world).
-
-**The Problem:** You can only download the code either file by file or by cloning the whole repository ... not great!
-
-**The Solution:** Now you can use **Armadillo** to do that for you. The following link does just that:
-[https://armadillo.dostuffthatmatters.dev/GoogleCloudPlatform/cloud-code-samples/python/django/python-hello-world](https://armadillo.dostuffthatmatters.dev/GoogleCloudPlatform/cloud-code-samples/python/django/python-hello-world)
-
-<br/>
-
 ## Usage
 
 You don't have to configure anything!
