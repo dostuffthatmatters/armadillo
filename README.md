@@ -45,7 +45,9 @@ _Note: The latest commit hash is always the one with respect to that subdirector
 <br/>
 <br/>
 
-_I am using this tool for a lecture I am holding. I have one repo for the whole semester with one subdirectory in it for every week._
-_Students should not be required to download the whole repo every week and learning/using git is not a programming-introductory thing!_
+_I am using this tool for [a university tutorial I am holding](https://github.com/dostuffthatmatters/IN8011-WS20). 
+I have one repo for the whole semester with one subdirectory in it for every week.
+Students should not be required to download the whole repo every week and learning/using 
+git is not a programming-introductory thing!_
 
 [_buy me a coffee :)_](https://www.buymeacoffee.com/dstm)
