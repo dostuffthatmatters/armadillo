@@ -23,6 +23,14 @@ https://armadillo.dostuffthatmatters.dev/{username}/{repository-name}{subdirecto
 **Armadillo** will return a `zip`-file of that subdirectory from the latest version of the default repository branch.
 
 <br/>
+Examples:
+
+https://armadillo.dostuffthatmatters.dev/dostuffthatmatters/armadillo <br/>
+https://armadillo.dostuffthatmatters.dev/dostuffthatmatters/armadillo/README.md <br/>
+https://armadillo.dostuffthatmatters.dev/dostuffthatmatters/armadillo/app <br/>
+https://armadillo.dostuffthatmatters.dev/dostuffthatmatters/armadillo/app/main.py <br/>
+
+<br/>
 
 ## About the Implementation
 
