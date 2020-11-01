@@ -22,7 +22,12 @@ https://armadillo.dostuffthatmatters.dev/{username}/{repository-name}{subdirecto
 
 **Armadillo** will return a `zip`-file of that subdirectory from the latest version of the default repository branch.
 
+*When the app hasn't been used in a while the initial reponse time is approx. 5 seconds. 
+After that the responses will be returned really fast. Since the infrastructure in the back
+is serverless, the containers automatically shut down and boot back up in order to reduce costs.*
+
 <br/>
+
 Examples:
 
 https://armadillo.dostuffthatmatters.dev/dostuffthatmatters/armadillo <br/>
