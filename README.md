@@ -1,12 +1,14 @@
 # Armadillo
 
 <p align="center">
-<img src="https://www.nationalgeographic.com/content/dam/animals/thumbs/rights-exempt/mammals/group/armadillos_thumb.JPG" width="300" height="300"/>
+<img src="https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fpixfeeds.com%2Fimages%2Fanimals%2Farmadillos%2F1280-148035973-armadillo-standing-up.jpg&f=1&nofb=1" width="320" height="226"/>
 </p>
 
 ## Goal
 
 Providing download links for GitHub subdirectories.
+
+**Caution: This tool does not work reliably yet! See [Issue #2](https://github.com/dostuffthatmatters/armadillo/issues/2) for details**
 
 <br/>
 
